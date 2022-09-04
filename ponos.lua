@@ -510,43 +510,44 @@ fullScreenContainers.settingsShip = function(shipAddr, fromMulticore)
 
     container.layout2:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
     container.layout2:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setSpacing(1, 1, 0)
 
     local back, left, down = wrapper.ship.getDimNegative(shipAddr)
     local front, right, up = wrapper.ship.getDimPositive(shipAddr)
     local name = wrapper.ship.getShipName(shipAddr)
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 9, 1, colors.contentColor2, "Ship Name: ")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 20, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, name))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 20, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, name))).onInputFinished = function(_, object)
         name = object.text
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Front")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, front))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, front))).onInputFinished = function(_, object)
         front = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 2, 1, colors.contentColor2, "Up")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, up))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, up))).onInputFinished = function(_, object)
         up = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Left")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, left))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, left))).onInputFinished = function(_, object)
         left = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Right")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, right))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, right))).onInputFinished = function(_, object)
         right = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Down")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, down))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, down))).onInputFinished = function(_, object)
         down = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Back")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, back))).onTouch = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, back))).onInputFinished = function(_, object)
         back = tonumber(object.text)
     end
 
