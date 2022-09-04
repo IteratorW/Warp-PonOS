@@ -12,7 +12,7 @@ local internet = component.internet
 local files = {}
 print("Идет загрузка списка файлов..")
 fs.makeDirectory("/PonOS/")
-require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Interstellar2/master/filelist.txt /PonOS/filelist.txt -fq")
+require("shell").execute("wget https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/filelist /PonOS/filelist.txt -fq")
 local file = io.open("/PonOS/filelist.txt", "r")
 files = require("serialization").unserialize(file:read("*a"))
 file:close()
