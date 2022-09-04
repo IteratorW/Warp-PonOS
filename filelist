@@ -23,4 +23,36 @@
       url = "https://raw.githubusercontent.com/IgorTimofeev/GUI/master/GUI.lua",
       path = "/lib/GUI.lua"
   },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/ponos.lua",
+      path = "/ponos.lua"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/ponos_wrapper.lua",
+      path = "/lib/ponos_wrapper.lua"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/about_logo.pic",
+      path = "/PonOS/pics/about_logo.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/debug.pic",
+      path = "/PonOS/pics/debug.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_debug.pic",
+      path = "/PonOS/pics/icon_debug.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_jump.pic",
+      path = "/PonOS/pics/icon_jump.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_radar.pic",
+      path = "/PonOS/pics/icon_radar.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_s_info.pic",
+      path = "/PonOS/pics/icon_s_info.pic"
+  },
 }
