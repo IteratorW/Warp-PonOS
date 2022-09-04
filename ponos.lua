@@ -615,8 +615,8 @@ fullScreenContainers.multiCoreSetup = function(shipAddr)
                 local x, y, z = wrapper.ship.getPosition(ship)
                 local dX, dY, dZ = aX - x, aY - y, aZ - z
 
-                wrapper.ship.setDimNegative(back - (z - dZ), left - (x - dX), down - (y - dY))
-                wrapper.ship.setDimPositive(front - (z - dZ), right - (x - dX), up - (y - dY))
+                wrapper.ship.setDimNegative(back - dX, left - dZ, down - dY, ship)
+                wrapper.ship.setDimPositive(front + dX, right + dZ, up + dY, ship)
             end
         end
 
