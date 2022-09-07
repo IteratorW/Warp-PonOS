@@ -582,6 +582,16 @@ fullScreenContainers.base = function(name, columns, rows)
     return container
 end
 
+fullScreenContainers.baseSettings = function(name, columns, rows)
+    local container = fullScreenContainers.base(name, columns, rows)
+
+    container.actionLayout = container.layout:setPosition(1, 1, container.layout:addChild(GUI.layout(1, 1, container.layout2.width, 5, 1, 1)))
+
+    container.actionLayout:setDirection(1, 1, GUI.DIRECTION_HORIZONTAL)
+
+    return container
+end
+
 fullScreenContainers.about = function()
     local container = fullScreenContainers.base("About", 1, 1)
 
@@ -598,58 +608,63 @@ fullScreenContainers.about = function()
 end
 
 fullScreenContainers.settingsShip = function(shipAddr, fromMulticore)
-    local container = fullScreenContainers.base("Edit ship", 1, 1)
-
-    container.layout2:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
-    container.layout2:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-    container.layout2:setSpacing(1, 1, 0)
+    local container = fullScreenContainers.baseSettings("Edit ship", 1, 1)
 
     local back, left, down = wrapper.ship.getDimNegative(shipAddr)
     local front, right, up = wrapper.ship.getDimPositive(shipAddr)
     local name = wrapper.ship.getShipName(shipAddr)
 
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 9, 1, colors.contentColor2, "Ship Name: ")))
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 9, 1, colors.contentColor2, "Ship Name")))
     container.layout2:setPosition(1, 1, container.layout2:addChild(p_input(1, 1, 20, 1, name))).onInputFinished = function(_, object)
         name = object.text
     end
 
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Front")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, front))).onInputFinished = function(_, object)
+    local layout3 = container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.layout(1, 1, container.layout2.width, container.layout2.height - 5, 2, 1)))
+
+    layout3:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
+    layout3:setDirection(2, 1, GUI.DIRECTION_VERTICAL)
+    layout3:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
+    layout3:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_TOP)
+    layout3:setMargin(1, 1, 3, 0)
+    layout3:setMargin(2, 1, 3, 0)
+
+    layout3:setPosition(1, 1, layout3:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Front")))
+    layout3:setPosition(1, 1, layout3:addChild(p_intInput(1, 1, 6, 1, front))).onInputFinished = function(_, object)
         front = tonumber(object.text)
     end
 
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 2, 1, colors.contentColor2, "Up")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, up))).onInputFinished = function(_, object)
-        up = tonumber(object.text)
-    end
-
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Left")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, left))).onInputFinished = function(_, object)
-        left = tonumber(object.text)
-    end
-
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Right")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, right))).onInputFinished = function(_, object)
-        right = tonumber(object.text)
-    end
-
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Down")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, down))).onInputFinished = function(_, object)
-        down = tonumber(object.text)
-    end
-
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Back")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, back))).onInputFinished = function(_, object)
+    layout3:setPosition(2, 1, layout3:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Back")))
+    layout3:setPosition(2, 1, layout3:addChild(p_intInput(1, 1, 6, 1, back))).onInputFinished = function(_, object)
         back = tonumber(object.text)
     end
 
-    container.layout:setPosition(1, 1, container.layout:addChild(p_accentButton(1, 1, 10, 3, "Apply"))).onTouch = function()
+    layout3:setPosition(1, 1, layout3:addChild(GUI.label(1, 1, 2, 1, colors.contentColor2, "Up")))
+    layout3:setPosition(1, 1, layout3:addChild(p_intInput(1, 1, 6, 1, up))).onInputFinished = function(_, object)
+        up = tonumber(object.text)
+    end
+
+    layout3:setPosition(2, 1, layout3:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Down")))
+    layout3:setPosition(2, 1, layout3:addChild(p_intInput(1, 1, 6, 1, down))).onInputFinished = function(_, object)
+        down = tonumber(object.text)
+    end
+
+    layout3:setPosition(1, 1, layout3:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Left")))
+    layout3:setPosition(1, 1, layout3:addChild(p_intInput(1, 1, 6, 1, left))).onInputFinished = function(_, object)
+        left = tonumber(object.text)
+    end
+
+    layout3:setPosition(2, 1, layout3:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Right")))
+    layout3:setPosition(2, 1, layout3:addChild(p_intInput(1, 1, 6, 1, right))).onInputFinished = function(_, object)
+        right = tonumber(object.text)
+    end
+
+    container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_accentButton(1, 1, 10, 3, "Apply"))).onTouch = function()
         wrapper.ship.setShipName(name, shipAddr)
         wrapper.ship.setDimNegative(back, left, down, shipAddr)
         wrapper.ship.setDimPositive(front, right, up, shipAddr)
     end
 
-    container.layout:setPosition(1, 1, container.layout:addChild(p_successButton(1, 1, 10, 3, "Done"))).onTouch = function()
+    container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_successButton(1, 1, 10, 3, "Done"))).onTouch = function()
         container:remove()
 
         if fromMulticore then
@@ -661,16 +676,17 @@ fullScreenContainers.settingsShip = function(shipAddr, fromMulticore)
 end
 
 fullScreenContainers.multiCoreSetup = function(shipAddr)
-    local container = fullScreenContainers.base("MultiCore Setup", 1, 1)
+    local container = fullScreenContainers.baseSettings("MultiCore Setup", 1, 1)
 
     container.layout2:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
     container.layout2:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
     container.layout2:setSpacing(1, 1, 0)
 
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "In order to setup MultiCore, you need to"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "select a core and configure its sizes."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "Then, when you will be ready, the program"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "will calculate dimensions automatically for the rest of the cores."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "In order to setup MultiCore, you are required to"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "select an \"anchor\" core and configure its sizes."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "After that - just press the Begin button, and the"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "program will calculate every other core dimensions"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "automatically."))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "Please, select an anchor core to configure:"))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, ""))):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
@@ -686,12 +702,14 @@ fullScreenContainers.multiCoreSetup = function(shipAddr)
         fullScreenContainers.settingsShip(comboBox:getItem(index).text, true)
     end
 
-    container.layout:setPosition(1, 1, container.layout:addChild(p_dangerButton(1, 1, 10, 3, "Cancel"))).onTouch = function()
+    ---------------------------
+
+    container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_dangerButton(1, 1, 10, 3, "Cancel"))).onTouch = function()
         container:remove()
         fullScreenContainers.settingsMain()
     end
 
-    local beginButt = container.layout:setPosition(1, 1, container.layout:addChild(p_successButton(1, 1, 10, 3, "Begin")))
+    local beginButt = container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_successButton(1, 1, 10, 3, "Begin")))
 
     beginButt.onTouch = function()
         local anchor = comboBox:getItem(comboBox.selectedItem).text
@@ -725,7 +743,7 @@ fullScreenContainers.multiCoreSetup = function(shipAddr)
 end
 
 fullScreenContainers.settingsMain = function()
-    local container = fullScreenContainers.base("Settings", 2, 1)
+    local container = fullScreenContainers.baseSettings("Settings", 2, 1)
 
     -- First column
     container.layout2:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
@@ -770,12 +788,12 @@ fullScreenContainers.settingsMain = function()
 
     ----------------------------
 
-    container.layout:setPosition(1, 1, container.layout:addChild(p_dangerButton(1, 1, 10, 3, "Cancel"))).onTouch = function()
+    container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_dangerButton(1, 1, 10, 3, "Cancel"))).onTouch = function()
         container:remove()
         application:draw()
     end
 
-    container.layout:setPosition(1, 1, container.layout:addChild(p_successButton(1, 1, 10, 3, "Save"))).onTouch = function()
+    container.actionLayout:setPosition(1, 1, container.actionLayout:addChild(p_successButton(1, 1, 10, 3, "Save"))).onTouch = function()
         settings.proxyEnabled = proxySwitch.switch.state
         settings.proxyAddress = proxyInput.text
         settings.accentColor = selector.color
@@ -837,8 +855,8 @@ bar = application:addChild(p_appBar(1, 2, application.width, {
     { "Jump Menu", "jump" },
     { "Ship Info", "s_info" },
     { "Warp Radar", "radar" },
-    { "Cloaking", "cloaking" },
     { "Crew", "crew" },
+    { "Cloaking", "cloaking" },
     { "Transporter", "transporter" }
 }))
 
