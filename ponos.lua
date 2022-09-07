@@ -772,12 +772,26 @@ fullScreenContainers.settingsMain = function()
     container.layout2:setPosition(2, 1, container.layout2:addChild(p_titleDelimiterBar(1, 1, 1, "Ship Settings")))
 
     container.layout2:setPosition(2, 1, container.layout2:addChild(p_accentButton(1, 1, 1, 3, "Edit ship name and dimensions"))).onTouch = function()
+        if not wrapper.shipApiAvailable() then
+            GUI.alert("Ship is not available.")
+
+            return
+        end
+
         container:remove()
         fullScreenContainers.settingsShip()
     end
 
     container.layout2:setPosition(2, 1, container.layout2:addChild(p_switchAndLabel(1, 1, 1, "Enable MultiCore", settings.multiCoreEnabled))).switch.onStateChanged = function(state)
         if state.state then
+            if not wrapper.ship.hasMultipleControllers() then
+                state:setState(false)
+
+                GUI.alert("You need to have at least 2 cores connected in order to use MultiCore.")
+
+                return
+            end
+
             container:remove()
             fullScreenContainers.multiCoreSetup()
         else
