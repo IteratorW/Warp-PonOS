@@ -6,6 +6,9 @@ local wrapper = require("ponos_wrapper")
 local fs = require("filesystem")
 
 --------------------------------------------------------------------------------
+-- Constants and settings
+
+local application = GUI.application()
 
 local colors = {
     elevation1 = 0x0d0d0d,
@@ -64,8 +67,27 @@ local function loadSettings()
 end
 
 --------------------------------------------------------------------------------
+-- Utility functions
 
-local application = GUI.application()
+local function calculateMultiCoreDimensions(anchor)
+    local aX, aY, aZ = wrapper.ship.getPosition(anchor)
+
+    local back, left, down = wrapper.ship.getDimNegative(anchor)
+    local front, right, up = wrapper.ship.getDimPositive(anchor)
+
+    for _, ship in ipairs(wrapper.ship.getAllControllersAddresses()) do
+        if ship ~= anchor then
+            local x, y, z = wrapper.ship.getPosition(ship)
+            local dX, dY, dZ = aX - x, aY - y, aZ - z
+
+            wrapper.ship.setDimNegative(back - dX, left - dZ, down - dY, ship)
+            wrapper.ship.setDimPositive(front + dX, right + dZ, up + dY, ship)
+        end
+    end
+end
+
+--------------------------------------------------------------------------------
+-- Window manager
 
 local windowManager = {
     activeWindows = {}
@@ -118,6 +140,7 @@ windowManager.reloadWindows = function()
 end
 
 --------------------------------------------------------------------------------
+-- Custom UI objects
 
 local function getWindowLayout(window, columns, rows)
     return window:addChild(GUI.layout(4, 2, window.width - 6, window.height - 2, columns, rows))
@@ -199,7 +222,62 @@ local function p_successButton(x, y, width, height, text)
     return GUI.roundedButton(x, y, width, height, colors.successColor, colors.successTextColor, colors.successPressedColor, colors.successTextColor, text)
 end
 
-local function p_multicoreView(x, y, width, height)
+local function p_input(x, y, width, height, text, placeholderText, eraseTextOnFocus, textMask)
+    if type(text) ~= "string" then
+        text = tostring(text)
+    end
+
+    local input = GUI.input(x, y, width, height, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, text, placeholderText, eraseTextOnFocus, textMask)
+
+    input.colors.cursor = colors.accentColor
+
+    return input
+end
+
+local function p_intInput(x, y, width, height, text, placeholderText, eraseTextOnFocus, textMask)
+    local input = p_input(x, y, width, height, text, placeholderText, eraseTextOnFocus, textMask)
+
+    input.validator = function(objText)
+        return objText:match("%d+")
+    end
+
+    return input
+end
+
+local function p_rangedIntInput(x, y, width, height, text, min, max, placeholderText, eraseTextOnFocus, textMask)
+    local input = p_intInput(x, y, width, height, text, placeholderText, eraseTextOnFocus, textMask)
+
+    input.min = min
+    input.max = max
+
+    input.onRangedInputFinished = function(number)
+
+    end
+
+    input.onInputFinished = function()
+        num = tonumber(input.text)
+
+        if not num then
+            return
+        end
+
+        if num < input.min then num = input.min elseif num > input.max then num = input.max end
+
+        input.text = tostring(num)
+
+        input.onRangedInputFinished(num)
+    end
+
+    return input
+end
+
+local function p_switchAndLabel(x, y, width, text, state)
+    local switch = GUI.switchAndLabel(x, y, width, 7, colors.accentColor, colors.focusColor, colors.contentColor2, colors.contentColor2, text, state)
+
+    return switch
+end
+
+local function p_multiCoreView(x, y, width, height)
     local canvas = GUI.brailleCanvas(x, y, width, height)
 
     canvas.update = function()
@@ -249,7 +327,7 @@ local function p_appButton(x, y, name, id)
 
     appButt.name = name
     appButt.id = id
-
+    
     appButt.image = image.load("/PonOS/pics/icon_" .. appButt.id .. ".pic")
 
     appButt.onTouch = function()
@@ -314,6 +392,7 @@ local function p_titleDelimiterBar(x, y, width, text)
 end
 
 --------------------------------------------------------------------------------
+-- Windows (apps)
 
 local windows = {
     debug = function()
@@ -346,8 +425,20 @@ local windows = {
             window.yLabel.text = string.format("Y (%s - %s)", pY + nY, maxY)
             window.zLabel.text = string.format("Z (%s - %s)", pZ + nZ, maxZ)
 
-            window.multicoreView.hidden = not settings.multiCoreEnabled
-            window.multicoreView.update()
+            window.xInp.min = -maxX
+            window.xInp.max = maxX
+
+            window.yInp.min = -maxY
+            window.yInp.max = maxY
+
+            window.zInp.min = -maxZ
+            window.zInp.max = maxZ
+
+            window.multiCoreView.hidden = not settings.multiCoreEnabled
+
+            if not window.multiCoreView.hidden then
+                window.multiCoreView.update()
+            end
         end
 
         local layout = getWindowLayout(window, 1, 2)
@@ -375,13 +466,13 @@ local windows = {
         layout2:setFitting(1, 1, true, false, 0, 0)
 
         window.xLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "X (?-?)")))
-        local xInp = layout2:setPosition(1, 1, layout2:addChild(GUI.input(1, 1, 1, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, "")))
+        window.xInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
 
         window.yLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "Y (?-?)")))
-        local yInp = layout2:setPosition(1, 1, layout2:addChild(GUI.input(1, 1, 1, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, "")))
+        window.yInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
 
         window.zLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "Z (?-?)")))
-        local zInp = layout2:setPosition(1, 1, layout2:addChild(GUI.input(1, 1, 1, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, "")))
+        window.zInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
 
         -- Multicore view
 
@@ -389,7 +480,7 @@ local windows = {
         layout2:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
         layout2:setMargin(2, 1, 1, 1)
 
-        window.multicoreView = layout2:setPosition(2, 1, layout2:addChild(p_multicoreView(1, 1, 16, 8)))
+        window.multiCoreView = layout2:setPosition(2, 1, layout2:addChild(p_multiCoreView(1, 1, 16, 8)))
 
         local function getJumpCore()
             if settings.multiCoreEnabled then
@@ -404,7 +495,7 @@ local windows = {
         end
 
         jumpButton.onTouch = function()
-            wrapper.ship.jump(0, tonumber(xInp.text), tonumber(yInp.text), tonumber(zInp.text), false, getJumpCore())
+            wrapper.ship.jump(0, tonumber(window.xInp.text), tonumber(window.yInp.text), tonumber(window.zInp.text), false, getJumpCore())
         end
 
         hyperButton.onTouch = function()
@@ -474,6 +565,7 @@ local windows = {
 }
 
 --------------------------------------------------------------------------------
+-- Fullscreen containers
 
 local fullScreenContainers = {}
 
@@ -517,37 +609,37 @@ fullScreenContainers.settingsShip = function(shipAddr, fromMulticore)
     local name = wrapper.ship.getShipName(shipAddr)
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 9, 1, colors.contentColor2, "Ship Name: ")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 20, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, name))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_input(1, 1, 20, 1, name))).onInputFinished = function(_, object)
         name = object.text
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Front")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, front))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, front))).onInputFinished = function(_, object)
         front = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 2, 1, colors.contentColor2, "Up")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, up))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, up))).onInputFinished = function(_, object)
         up = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Left")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, left))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, left))).onInputFinished = function(_, object)
         left = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 5, 1, colors.contentColor2, "Right")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, right))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, right))).onInputFinished = function(_, object)
         right = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Down")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, down))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, down))).onInputFinished = function(_, object)
         down = tonumber(object.text)
     end
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 4, 1, colors.contentColor2, "Back")))
-    container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 6, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, back))).onInputFinished = function(_, object)
+    container.layout2:setPosition(1, 1, container.layout2:addChild(p_intInput(1, 1, 6, 1, back))).onInputFinished = function(_, object)
         back = tonumber(object.text)
     end
 
@@ -602,23 +694,9 @@ fullScreenContainers.multiCoreSetup = function(shipAddr)
     local beginButt = container.layout:setPosition(1, 1, container.layout:addChild(p_successButton(1, 1, 10, 3, "Begin")))
 
     beginButt.onTouch = function()
-        -- Dim calculation might not work if your orientation is not X 1 Z 0
         local anchor = comboBox:getItem(comboBox.selectedItem).text
 
-        local aX, aY, aZ = wrapper.ship.getPosition(anchor)
-
-        local back, left, down = wrapper.ship.getDimNegative(anchor)
-        local front, right, up = wrapper.ship.getDimPositive(anchor)
-
-        for _, ship in ipairs(wrapper.ship.getAllControllersAddresses()) do
-            if ship ~= anchor then
-                local x, y, z = wrapper.ship.getPosition(ship)
-                local dX, dY, dZ = aX - x, aY - y, aZ - z
-
-                wrapper.ship.setDimNegative(back - dX, left - dZ, down - dY, ship)
-                wrapper.ship.setDimPositive(front + dX, right + dZ, up + dY, ship)
-            end
-        end
+        calculateMultiCoreDimensions(anchor)
 
         settings.multiCoreEnabled = true
         saveSettings()
@@ -657,10 +735,10 @@ fullScreenContainers.settingsMain = function()
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(p_titleDelimiterBar(1, 1, 1, "PonOS Proxy")))
 
-    local proxySwitch = container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.switchAndLabel(1, 1, 1, 7, colors.accentColor, colors.focusColor, colors.contentColor2, colors.contentColor2, "Enable proxy", settings.proxyEnabled)))
+    local proxySwitch = container.layout2:setPosition(1, 1, container.layout2:addChild(p_switchAndLabel(1, 1, 1, "Enable proxy", settings.proxyEnabled)))
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.label(1, 1, 10, 1, colors.contentColor2, "Address:")))
-    local proxyInput = container.layout2:setPosition(1, 1, container.layout2:addChild(GUI.input(1, 1, 1, 1, colors.elevation4, colors.contentColor2, colors.placeholderTextColor, colors.focusColor, colors.contentColor, settings.proxyAddress)))
+    local proxyInput = container.layout2:setPosition(1, 1, container.layout2:addChild(p_input(1, 1, 1, 1, settings.proxyAddress)))
 
     container.layout2:setPosition(1, 1, container.layout2:addChild(p_titleDelimiterBar(1, 1, 1, "Appearance")))
 
@@ -680,7 +758,7 @@ fullScreenContainers.settingsMain = function()
         fullScreenContainers.settingsShip()
     end
 
-    container.layout2:setPosition(2, 1, container.layout2:addChild(GUI.switchAndLabel(1, 1, 1, 7, colors.accentColor, colors.focusColor, colors.contentColor2, colors.contentColor2, "Enable MultiCore", settings.multiCoreEnabled))).switch.onStateChanged = function(state)
+    container.layout2:setPosition(2, 1, container.layout2:addChild(p_switchAndLabel(1, 1, 1, "Enable MultiCore", settings.multiCoreEnabled))).switch.onStateChanged = function(state)
         if state.state then
             container:remove()
             fullScreenContainers.multiCoreSetup()
@@ -710,8 +788,11 @@ fullScreenContainers.settingsMain = function()
 end
 
 --------------------------------------------------------------------------------
+-- Startup code
 
 loadSettings()
+
+-- Main container
 
 application:addChild(GUI.panel(1, 1, application.width, application.height, colors.elevation1))
 
@@ -721,8 +802,8 @@ local contextMenu = menu:addContextMenu("PonOS")
 contextMenu:addItem("Open debug window").onTouch = function()
     windowManager.openWindow(windows["debug"]())
 end
-local wrapperButton = contextMenu:addItem("Switch demo mode (" .. tostring(wrapper.demoMode) .. ")")
 
+local wrapperButton = contextMenu:addItem("Switch demo mode (" .. tostring(wrapper.demoMode) .. ")")
 wrapperButton.onTouch = function()
     wrapper.demoMode = not wrapper.demoMode
 
@@ -736,7 +817,9 @@ end
 contextMenu:addItem("About").onTouch = function()
     fullScreenContainers.about()
 end
+
 contextMenu:addSeparator()
+
 contextMenu:addItem("Exit").onTouch = function()
     application:stop()
 
@@ -750,7 +833,14 @@ menu:addItem("Refresh info", colors.contentColor2).onTouch = function()
     windowManager.reloadWindows()
 end
 
-bar = application:addChild(p_appBar(1, 2, application.width, { { "Jump Menu", "jump" }, { "Ship Info", "s_info" } }))
+bar = application:addChild(p_appBar(1, 2, application.width, {
+    { "Jump Menu", "jump" },
+    { "Ship Info", "s_info" },
+    { "Warp Radar", "radar" },
+    { "Cloaking", "cloaking" },
+    { "Crew", "crew" },
+    { "Transporter", "transporter" }
+}))
 
 bar.onAppSelected = function(id)
     window = windows[id]()
