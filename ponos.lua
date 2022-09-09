@@ -140,7 +140,7 @@ windowManager.reloadWindows = function()
 end
 
 --------------------------------------------------------------------------------
--- Custom UI objects
+-- Custom UI objects and functions
 
 local function getWindowLayout(window, columns, rows)
     return window:addChild(GUI.layout(4, 2, window.width - 6, window.height - 2, columns, rows))
@@ -261,7 +261,11 @@ local function p_rangedIntInput(x, y, width, height, text, min, max, placeholder
             return
         end
 
-        if num < input.min then num = input.min elseif num > input.max then num = input.max end
+        if num < input.min then
+            num = input.min
+        elseif num > input.max then
+            num = input.max
+        end
 
         input.text = tostring(num)
 
@@ -277,10 +281,23 @@ local function p_switchAndLabel(x, y, width, text, state)
     return switch
 end
 
-local function p_multiCoreView(x, y, width, height)
-    local canvas = GUI.brailleCanvas(x, y, width, height)
+local function p_multiCoreView(x, y)
+    local layout = GUI.layout(x, y, 16, 14, 1, 1)
 
-    canvas.update = function()
+    layout:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
+    layout:setAlignment(1, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
+    layout:setSpacing(1, 1, 0, 0)
+
+    local canvas = layout:setPosition(1, 1, layout:addChild(GUI.brailleCanvas(x, y, 16, 8)))
+
+    layout:setPosition(1, 1, layout:addChild(GUI.text(1, 1, 0x0, "")))
+    local active = layout:setPosition(1, 1, layout:addChild(GUI.label(1, 1, 16, 1, colors.accentColor, "N/A")))
+    local ready = layout:setPosition(1, 1, layout:addChild(GUI.label(1, 1, 16, 1, colors.successColor, "N/A")))
+    local cooldown = layout:setPosition(1, 1, layout:addChild(GUI.label(1, 1, 16, 1, colors.dangerColor, "N/A")))
+
+    layout.updateShips = function()
+        local ship_amounts = { 0, 0, 0 }
+
         local stats = wrapper.ship.getCoreStats()
 
         local itemSize = 5
@@ -306,10 +323,16 @@ local function p_multiCoreView(x, y, width, height)
 
                 if status == "cooldown" then
                     color = colors.dangerColor
+
+                    ship_amounts[1] = ship_amounts[1] + 1
                 elseif status == "active" then
                     color = colors.accentColor
+
+                    ship_amounts[2] = ship_amounts[2] + 1
                 elseif status == "ready" then
                     color = colors.successColor
+
+                    ship_amounts[3] = ship_amounts[3] + 1
                 else
                     color = 0x0000FF
                 end
@@ -317,9 +340,13 @@ local function p_multiCoreView(x, y, width, height)
                 canvas:fill(1 + (c * itemSize) + (c * itemSpacing), 1 + (r * itemSize) + (r * itemSpacing), itemSize, itemSize, true, color)
             end
         end
+
+        cooldown.text = string.format("%s on cooldown", ship_amounts[1])
+        active.text = string.format("%s active", ship_amounts[2])
+        ready.text = string.format("%s ready", ship_amounts[3])
     end
 
-    return canvas
+    return layout
 end
 
 local function p_appButton(x, y, name, id)
@@ -327,7 +354,7 @@ local function p_appButton(x, y, name, id)
 
     appButt.name = name
     appButt.id = id
-    
+
     appButt.image = image.load("/PonOS/pics/icon_" .. appButt.id .. ".pic")
 
     appButt.onTouch = function()
@@ -437,7 +464,7 @@ local windows = {
             window.multiCoreView.hidden = not settings.multiCoreEnabled
 
             if not window.multiCoreView.hidden then
-                window.multiCoreView.update()
+                window.multiCoreView.updateShips()
             end
         end
 
@@ -448,11 +475,13 @@ local windows = {
         layout:setDirection(1, 2, GUI.DIRECTION_HORIZONTAL)
         layout:setAlignment(1, 2, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_BOTTOM)
 
-        local jumpButton = layout:setPosition(1, 2, layout:addChild(p_accentButton(1, 1, 12, 3, "Jump")))
+        local jumpButton = layout:setPosition(1, 2, layout:addChild(p_accentButton(1, 1, 6, 3, "Jump")))
 
         local hyperButton = layout:setPosition(1, 2, layout:addChild(p_dangerButton(1, 1, 12, 3, "Hyper jump")))
 
-        layout:setPosition(1, 2, layout:addChild(p_accentButton(1, 1, 13, 3, "Rotate ship")))
+        local rotateButton = layout:setPosition(1, 2, layout:addChild(p_accentButton(1, 1, 8, 3, "Rotate")))
+
+        local cancelButton = layout:setPosition(1, 2, layout:addChild(p_dangerButton(1, 1, 11, 3, "Stop Jump")))
 
         -- Second layout --
 
@@ -477,29 +506,47 @@ local windows = {
         -- Multicore view
 
         layout2:setSpacing(2, 1, 0)
-        layout2:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
-        layout2:setMargin(2, 1, 1, 1)
+        layout2:setAlignment(2, 1, GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_TOP)
+        layout2:setMargin(2, 1, 1, 2)
 
-        window.multiCoreView = layout2:setPosition(2, 1, layout2:addChild(p_multiCoreView(1, 1, 16, 8)))
+        window.multiCoreView = layout2:setPosition(2, 1, layout2:addChild(p_multiCoreView(1, 1)))
 
-        local function getJumpCore()
+        -------------------------------------------------
+
+        local currentController
+
+        local function setNextController()
             if settings.multiCoreEnabled then
-                local core = wrapper.ship.getMostLatelyUsedController()
+                currentController = wrapper.ship.getMostLatelyUsedController()
 
-                wrapper.ship.setExclusivelyOnline(core)
-
-                return core
+                wrapper.ship.setExclusivelyOnline(currentController)
             else
-                return wrapper.ship.getComponent().address
+                currentController = wrapper.ship.getComponent().address
             end
+
+            window.reload()
         end
 
         jumpButton.onTouch = function()
-            wrapper.ship.jump(0, tonumber(window.xInp.text), tonumber(window.yInp.text), tonumber(window.zInp.text), false, getJumpCore())
+            setNextController()
+
+            wrapper.ship.jump(0, tonumber(window.xInp.text), tonumber(window.yInp.text), tonumber(window.zInp.text), false, currentController)
         end
 
         hyperButton.onTouch = function()
-            wrapper.ship.jump(nil, nil, nil, nil, true, getJumpCore())
+            setNextController()
+
+            wrapper.ship.jump(nil, nil, nil, nil, true, currentController)
+        end
+
+        cancelButton.onTouch = function()
+            if currentController then
+                wrapper.ship.cancelJump(currentController)
+            end
+        end
+
+        rotateButton.onTouch = function()
+            GUI.alert("Not implemented yet, sorry")
         end
 
         return window

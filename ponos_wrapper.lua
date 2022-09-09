@@ -1,5 +1,6 @@
 local component = require("component")
 local event = require("event")
+local thread = require("thread")
 
 local wrapper = {}
 
@@ -10,7 +11,15 @@ wrapper.transporter = {} -- MatterOverdrive Transporter
 
 wrapper.ship.controllerTimes = {}
 
-wrapper.multicoreActive = false
+local t = thread.create(function()
+    while true do
+        local addr = event.pull("shipCoreCooldownDone")
+
+        wrapper.ship.controllerTimes[addr] = 0
+    end
+end)
+
+t:detach()
 
 wrapper.shipApiAvailable = function()
     return component.isAvailable("warpdriveShipController") or wrapper.demoMode
@@ -116,6 +125,10 @@ end
 
 wrapper.ship.hasMultipleControllers = function()
     -- Returns true if multiple controllers are connected at the moment
+    if wrapper.demoMode then
+        return true
+    end
+
     return #component.list("warpdriveShipController") > 1
 end
 
@@ -126,7 +139,7 @@ wrapper.ship.getCoreStats = function()
     -- "cooldown" means that this core has been used recently and is currently on cooldown
 
     if wrapper.demoMode then
-        return {"ready"}
+        return {"ready", "active", "cooldown", "cooldown", "ready", "cooldown", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready"}
     end
 
     local results = {}
@@ -134,7 +147,7 @@ wrapper.ship.getCoreStats = function()
     for ship, _ in pairs(component.list("warpdriveShipController")) do
        local shipTime = wrapper.ship.controllerTimes[ship]
 
-        if shipTime ~= nil and (os.time() - shipTime) < 40 then
+        if shipTime ~= 0 then
             table.insert(results, "cooldown")
         elseif wrapper.ship.getCommand(ship) ~= "OFFLINE" then
             table.insert(results, "active")
@@ -161,8 +174,8 @@ wrapper.ship.getAllControllersAddresses = function()
     return addresses
 end
 
-wrapper.ship.getMostLatelyUsedController = function()
-    -- Returns a controller that has not been used for longest time
+wrapper.ship.getNextMultiCoreController = function()
+    -- Returns a controller that doesn't have a cooldown or a controller with least cooldown.
     -- that's shitcode
     -- pls forgive me
     -- (and write a better thing)
@@ -344,6 +357,12 @@ wrapper.ship.cancelJump = function(addr)
     -- Cancels the jump (Alias for ship.enable(false))
     if wrapper.demoMode then
         return
+    end
+
+    if addr ~= nil then
+        wrapper.ship.controllerTimes[addr] = 0
+    else
+        wrapper.ship.controllerTimes[wrapper.ship.getComponent().address] = 0
     end
 
     wrapper.ship.enable(false, addr)
