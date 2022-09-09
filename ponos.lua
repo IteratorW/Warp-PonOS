@@ -438,11 +438,12 @@ local windows = {
         end
 
         local window = p_window(40, 20, 50, 21, "Jump controls", "jump")
+        local currentController
 
         window.reload = function()
-            local max = wrapper.ship.getMaxJumpDistance()
-            local pX, pY, pZ = wrapper.ship.getDimPositive()
-            local nX, nY, nZ = wrapper.ship.getDimNegative()
+            local max = wrapper.ship.getMaxJumpDistance(currentController)
+            local pX, pY, pZ = wrapper.ship.getDimPositive(currentController)
+            local nX, nY, nZ = wrapper.ship.getDimNegative(currentController)
 
             local maxX = max + pX + nX
             local maxY = max + pY + nY
@@ -511,13 +512,11 @@ local windows = {
 
         window.multiCoreView = layout2:setPosition(2, 1, layout2:addChild(p_multiCoreView(1, 1)))
 
-        -------------------------------------------------
-
-        local currentController
+        ------------------------------------------------
 
         local function setNextController()
             if settings.multiCoreEnabled then
-                currentController = wrapper.ship.getMostLatelyUsedController()
+                currentController = wrapper.ship.getNextMultiCoreController()
 
                 wrapper.ship.setExclusivelyOnline(currentController)
             else
@@ -548,6 +547,8 @@ local windows = {
         rotateButton.onTouch = function()
             GUI.alert("Not implemented yet, sorry")
         end
+
+        setNextController()
 
         return window
     end,
