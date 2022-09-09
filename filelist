@@ -55,4 +55,16 @@
       url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_s_info.pic",
       path = "/PonOS/pics/icon_s_info.pic"
   },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_cloaking.pic",
+      path = "/PonOS/pics/icon_cloaking.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_crew.pic",
+      path = "/PonOS/pics/icon_crew.pic"
+  },
+  {
+      url = "https://raw.githubusercontent.com/IteratorW/Warp-PonOS/dungeon_master/pics/icon_transporter.pic",
+      path = "/PonOS/pics/icon_transporter.pic"
+  },
 }
