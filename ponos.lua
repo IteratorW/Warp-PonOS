@@ -446,14 +446,14 @@ local windows = {
 
                 if jump then
                     wrapper.ship.setExclusivelyOnline(currentController)
+
+                    window.reload()
                 else
                     wrapper.ship.setCommand("MANUAL", currentController)
                 end
             else
                 currentController = wrapper.ship.getComponent().address
             end
-
-            window.reload()
         end
 
         window.reload = function()
