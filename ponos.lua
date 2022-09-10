@@ -549,7 +549,7 @@ local windows = {
         end
 
         currentController = wrapper.ship.getNextMultiCoreController()
-        wrapper.ship.setCommand(currentController, "MANUAL")
+        wrapper.ship.setCommand("MANUAL", currentController)
 
         return window
     end,
