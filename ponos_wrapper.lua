@@ -214,7 +214,7 @@ wrapper.ship.setExclusivelyOnline = function(addr)
     -- Disables all cores and sets specified as online
     for ship_addr, _ in pairs(component.list("warpdriveShipController")) do
         if ship_addr == addr then
-            wrapper.ship.setCommand("IDLE", ship_addr)
+            wrapper.ship.setCommand("MANUAL", ship_addr)
         else
             wrapper.ship.setCommand("OFFLINE", ship_addr)
         end

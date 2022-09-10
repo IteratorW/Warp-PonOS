@@ -548,7 +548,8 @@ local windows = {
             GUI.alert("Not implemented yet, sorry")
         end
 
-        setNextController()
+        currentController = wrapper.ship.getNextMultiCoreController()
+        wrapper.ship.setCommand(currentController, "MANUAL")
 
         return window
     end,
