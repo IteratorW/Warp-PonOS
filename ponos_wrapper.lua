@@ -11,15 +11,9 @@ wrapper.transporter = {} -- MatterOverdrive Transporter
 
 wrapper.ship.controllerTimes = {}
 
-local t = thread.create(function()
-    while true do
-        local addr = event.pull("shipCoreCooldownDone")
-
-        wrapper.ship.controllerTimes[addr] = 0
-    end
+event.listen("shipCoreCooldownDone", function(_, addr)
+    wrapper.ship.controllerTimes[addr] = 0
 end)
-
-t:detach()
 
 wrapper.shipApiAvailable = function()
     return component.isAvailable("warpdriveShipController") or wrapper.demoMode
