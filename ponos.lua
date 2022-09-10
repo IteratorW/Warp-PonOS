@@ -440,7 +440,25 @@ local windows = {
         local window = p_window(40, 20, 50, 21, "Jump controls", "jump")
         local currentController
 
+        local function setNextController(jump)
+            if settings.multiCoreEnabled then
+                currentController = wrapper.ship.getNextMultiCoreController()
+
+                if jump then
+                    wrapper.ship.setExclusivelyOnline(currentController)
+                else
+                    wrapper.ship.setCommand("MANUAL", currentController)
+                end
+            else
+                currentController = wrapper.ship.getComponent().address
+            end
+
+            window.reload()
+        end
+
         window.reload = function()
+            setNextController(false)
+
             local max = wrapper.ship.getMaxJumpDistance(currentController)
             local pX, pY, pZ = wrapper.ship.getDimPositive(currentController)
             local nX, nY, nZ = wrapper.ship.getDimNegative(currentController)
@@ -496,13 +514,13 @@ local windows = {
         layout2:setFitting(1, 1, true, false, 0, 0)
 
         window.xLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "X (?-?)")))
-        window.xInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
+        window.xInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "0", 0, 0)))
 
         window.yLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "Y (?-?)")))
-        window.yInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
+        window.yInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "0", 0, 0)))
 
         window.zLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "Z (?-?)")))
-        window.zInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "", 0, 0)))
+        window.zInp = layout2:setPosition(1, 1, layout2:addChild(p_rangedIntInput(1, 1, 1, 1, "0", 0, 0)))
 
         -- Multicore view
 
@@ -514,26 +532,14 @@ local windows = {
 
         ------------------------------------------------
 
-        local function setNextController()
-            if settings.multiCoreEnabled then
-                currentController = wrapper.ship.getNextMultiCoreController()
-
-                wrapper.ship.setExclusivelyOnline(currentController)
-            else
-                currentController = wrapper.ship.getComponent().address
-            end
-
-            window.reload()
-        end
-
         jumpButton.onTouch = function()
-            setNextController()
+            setNextController(true)
 
             wrapper.ship.jump(0, tonumber(window.xInp.text), tonumber(window.yInp.text), tonumber(window.zInp.text), false, currentController)
         end
 
         hyperButton.onTouch = function()
-            setNextController()
+            setNextController(true)
 
             wrapper.ship.jump(nil, nil, nil, nil, true, currentController)
         end
@@ -547,9 +553,6 @@ local windows = {
         rotateButton.onTouch = function()
             GUI.alert("Not implemented yet, sorry")
         end
-
-        currentController = wrapper.ship.getNextMultiCoreController()
-        wrapper.ship.setCommand("MANUAL", currentController)
 
         return window
     end,
