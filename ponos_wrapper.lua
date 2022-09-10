@@ -147,7 +147,7 @@ wrapper.ship.getCoreStats = function()
     for ship, _ in pairs(component.list("warpdriveShipController")) do
        local shipTime = wrapper.ship.controllerTimes[ship]
 
-        if shipTime ~= 0 then
+        if shipTime ~= nil and shipTime ~= 0 then
             table.insert(results, "cooldown")
         elseif wrapper.ship.getCommand(ship) ~= "OFFLINE" then
             table.insert(results, "active")
