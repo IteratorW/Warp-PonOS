@@ -558,9 +558,7 @@ local windows = {
     end,
 
     s_info = function()
-        -- Ported from IS2. TODO: rewrite
-
-        local window = p_window(40, 20, 57, 13, "Ship information", "s_info")
+        local window = p_window(1, 1, 50, 15, "Ship Information", "s_info")
 
         window.reload = function()
             local x, y, z = wrapper.ship.getPosition()
@@ -583,34 +581,53 @@ local windows = {
             local maxEnergy = wrapper.ship.getMaxShipEnergy()
             local energyPercents = math.floor((shipEnergy / maxEnergy) * 100)
 
-            window.xLabel.text = x
-            window.yLabel.text = y
-            window.zLabel.text = z
-            window.dimLabel.text = dim
-            window.oLabel.text = string.format("X: %s, Z: %s", oX, oZ)
+            window.positionTextBox.lines[2] = string.format("X: %s", tostring(x))
+            window.positionTextBox.lines[3] = string.format("Y: %s", tostring(y))
+            window.positionTextBox.lines[4] = string.format("Z: %s", tostring(z))
+
+            window.dimLabel.text = string.format("Dimension: %s", dim)
+            window.orientationLabel.text = string.format("Orientation: X: %s, Z: %s", oX, oZ)
             window.nameLabel.text = string.format("Name: %s", wrapper.ship.getShipName())
             window.massLabel.text = string.format("Mass: %s", wrapper.ship.getShipMass())
-            window.assLabel.text = string.format("Assembly: %s", assembly)
+            window.assemblyLabel.text = string.format("Assembly: %s", assembly)
             window.energyBar.value = energyPercents
         end
 
-        window:addChild(GUI.label(2, 3, 8, 1, colors.contentColor, "Coordinates:"))
-        window.xLabel = window:addChild(GUI.label(2, 4, 8, 1, colors.contentColor, ""))
-        window.yLabel = window:addChild(GUI.label(2, 5, 8, 1, colors.contentColor, ""))
-        window.zLabel = window:addChild(GUI.label(2, 6, 8, 1, colors.contentColor, ""))
+        -- Energy bar
 
-        window:addChild(GUI.label(2, 8, 8, 1, colors.contentColor, "Dimension:"))
-        window.dimLabel = window:addChild(GUI.label(2, 9, 8, 1, colors.contentColor, ""))
+        local layout1 = getWindowLayout(window, 1, 2)
 
-        window:addChild(GUI.label(2, 11, 8, 1, colors.contentColor, "Orientation:"))
-        window.oLabel = window:addChild(GUI.label(2, 12, 8, 1, colors.contentColor, ""))
+        layout1:setRowHeight(1, GUI.SIZE_POLICY_RELATIVE, 0.70)
+        layout1:setFitting(1, 2, true, false)
 
-        window.nameLabel = window:addChild(GUI.label(17, 3, 8, 1, colors.contentColor, ""))
-        window.massLabel = window:addChild(GUI.label(17, 5, 8, 1, colors.contentColor, ""))
+        window.energyBar = layout1:setPosition(1, 2, layout1:addChild(GUI.progressBar(1, 1, 1, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Ship energy: ", "%")))
 
-        window.assLabel = window:addChild(GUI.label(17, 7, 8, 1, colors.contentColor, ""))
+        -- Main information
 
-        window.energyBar = window:addChild(GUI.progressBar(17, 9, 40, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Ship energy: ", "%"))
+        local layout2 = layout1:setPosition(1, 1, layout1:addChild(GUI.layout(1, 1, layout1.width, layout1.height, 2, 1)))
+
+        layout2:setFitting(1, 1, true, false)
+        layout2:setFitting(2, 1, true, false)
+
+        ---- Left column
+
+        layout2:setMargin(1, 1, 0, 1)
+        layout2:setMargin(2, 1, 0, -1)
+
+        window.positionTextBox = layout2:setPosition(1, 1, layout2:addChild(GUI.textBox(1, 1, 1, 4, nil, colors.contentColor, {"Position:", "N/A", "N/A", "N/A"})))
+        window.dimLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "dimension")))
+        window.orientationLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "orientation")))
+
+        ---- Right column
+
+        window.nameLabel = layout2:setPosition(2, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "name")))
+        window.nameLabel:setAlignment(GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
+
+        window.massLabel = layout2:setPosition(2, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "mass")))
+        window.massLabel:setAlignment(GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
+
+        window.assemblyLabel = layout2:setPosition(2, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "assembly")))
+        window.assemblyLabel:setAlignment(GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
 
         return window
     end
