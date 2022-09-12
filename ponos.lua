@@ -20,6 +20,9 @@ local colors = {
     focusTextColor = 0x000000,
     placeholderTextColor = 0x999999,
 
+    disabledBackground = 0xababab,
+    disabledTextColor = 0x4f4f4f,
+
     contentColor = 0xFFFFFF,
     contentColor2 = 0xadadad,
 
@@ -143,7 +146,11 @@ end
 -- Custom UI objects and functions
 
 local function getWindowLayout(window, columns, rows)
-    return window:addChild(GUI.layout(4, 2, window.width - 6, window.height - 2, columns, rows))
+    local layout = window:addChild(GUI.layout(4, 2, window.width - 6, window.height - 2, columns, rows))
+
+    layout.showGrid = false
+
+    return layout
 end
 
 GUI.drawShadow = function(x, y, width, height, transparency, thin)
@@ -210,16 +217,25 @@ local function p_window(x, y, width, height, title, id)
     return window
 end
 
+local function p_roundedButton(x, y, width, height, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundDisabledColor, textDisabledColor, text)
+    local button = GUI.roundedButton(x, y, width, height, backgroundColor, textColor, backgroundPressedColor, textPressedColor, backgroundDisabledColor, textDisabledColor, text)
+
+    button.colors.disabled.text = colors.disabledTextColor
+    button.colors.disabled.background = colors.disabledBackground
+
+    return button
+end
+
 local function p_accentButton(x, y, width, height, text)
-    return GUI.roundedButton(x, y, width, height, colors.accentColor, colors.accentTextColor, colors.accentPressedColor, colors.accentTextColor, text)
+    return p_roundedButton(x, y, width, height, colors.accentColor, colors.accentTextColor, colors.accentPressedColor, colors.accentTextColor, text)
 end
 
 local function p_dangerButton(x, y, width, height, text)
-    return GUI.roundedButton(x, y, width, height, colors.dangerColor, colors.dangerTextColor, colors.dangerPressedColor, colors.dangerTextColor, text)
+    return p_roundedButton(x, y, width, height, colors.dangerColor, colors.dangerTextColor, colors.dangerPressedColor, colors.dangerTextColor, text)
 end
 
 local function p_successButton(x, y, width, height, text)
-    return GUI.roundedButton(x, y, width, height, colors.successColor, colors.successTextColor, colors.successPressedColor, colors.successTextColor, text)
+    return p_roundedButton(x, y, width, height, colors.successColor, colors.successTextColor, colors.successPressedColor, colors.successTextColor, text)
 end
 
 local function p_input(x, y, width, height, text, placeholderText, eraseTextOnFocus, textMask)
@@ -276,9 +292,72 @@ local function p_rangedIntInput(x, y, width, height, text, min, max, placeholder
 end
 
 local function p_switchAndLabel(x, y, width, text, state)
-    local switch = GUI.switchAndLabel(x, y, width, 7, colors.accentColor, colors.focusColor, colors.contentColor2, colors.contentColor2, text, state)
+    local switch = GUI.switchAndLabel(x, y, width, 5, colors.accentColor, colors.focusColor, colors.contentColor2, colors.contentColor2, text, state)
 
     return switch
+end
+
+local function p_textBoxWithSelection(x, y, width, height)
+    local textBox = GUI.textBox(1, 1, 1, 1, colors.elevation2, colors.contentColor2, {}, 1, 0, 0, false, false)
+
+    -- Align to center
+    textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+
+    -- Enable the scrollbar
+
+    textBox.scrollBarEnabled = true
+    textBox.scrollBar.colors.background = colors.focusColor
+    textBox.scrollBar.colors.foreground = colors.accentColor
+
+    -- Custom attributes and methods
+
+    textBox.selectedIndex = nil
+    textBox.selectionAllowed = true
+
+    local prevHandler = textBox.eventHandler
+
+    textBox.eventHandler = function(app, self, eventName, _, eX, eY, scrollDir)
+        prevHandler(app, self, eventName, nil, nil, nil, scrollDir)
+
+        if self.selectionAllowed and eventName == "touch" or eventName == "drag" then
+            local newIndex = eY - self.y + self.currentLine
+
+            if newIndex <= #self.lines then
+                self:selectItem(newIndex)
+            end
+        end
+    end
+
+    textBox.selectItem = function(self, index)
+        if self.selectedIndex ~= nil then
+            self.lines[self.selectedIndex].color = colors.contentColor2
+        end
+
+        self.selectedIndex = index
+        self.lines[index].color = colors.accentColor
+
+        self:onItemSelected(index)
+
+        application:draw()
+    end
+
+    textBox.addItem = function(self, text)
+        table.insert(self.lines, { text = text, color = colors.contentColor2 })
+    end
+
+    textBox.clear = function(self)
+        self.lines = {}
+
+        self.selectedIndex = nil
+    end
+
+    -- event
+
+    textBox.onItemSelected = function(self, newIndex)
+
+    end
+
+    return textBox
 end
 
 local function p_multiCoreView(x, y)
@@ -614,7 +693,7 @@ local windows = {
         layout2:setMargin(1, 1, 0, 1)
         layout2:setMargin(2, 1, 0, -1)
 
-        window.positionTextBox = layout2:setPosition(1, 1, layout2:addChild(GUI.textBox(1, 1, 1, 4, nil, colors.contentColor, {"Position:", "N/A", "N/A", "N/A"})))
+        window.positionTextBox = layout2:setPosition(1, 1, layout2:addChild(GUI.textBox(1, 1, 1, 4, nil, colors.contentColor, { "Position:", "N/A", "N/A", "N/A" })))
         window.dimLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "dimension")))
         window.orientationLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "orientation")))
 
@@ -628,6 +707,159 @@ local windows = {
 
         window.assemblyLabel = layout2:setPosition(2, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "assembly")))
         window.assemblyLabel:setAlignment(GUI.ALIGNMENT_HORIZONTAL_RIGHT, GUI.ALIGNMENT_VERTICAL_CENTER)
+
+        return window
+    end,
+
+    radar = function()
+        if not wrapper.radarApiAvailable() then
+            GUI.alert("Radar is not available.")
+
+            return nil
+        end
+
+        local window = p_window(1, 1, 60, 25, "Warp Radar", "radar")
+
+        local lastResults = {}
+
+        window.reload = function()
+            local energyPercents = math.floor((wrapper.radar.getRadarEnergy() / wrapper.radar.getMaxRadarEnergy()) * 100 + 0.5)
+
+            window.energyBar.value = energyPercents
+        end
+
+        local layout = getWindowLayout(window, 1, 4)
+        layout:setRowHeight(1, GUI.SIZE_POLICY_RELATIVE, 0.3)
+        layout:setRowHeight(4, GUI.SIZE_POLICY_RELATIVE, 0.1)
+        layout:setRowHeight(2, GUI.SIZE_POLICY_RELATIVE, 0.1)
+        layout:setRowHeight(3, GUI.SIZE_POLICY_RELATIVE, 0.47)
+
+        -- Energy and radius row
+
+        layout:setFitting(1, 1, true, false)
+        layout:setDirection(1, 1, GUI.DIRECTION_VERTICAL)
+        layout:setSpacing(1, 1, 2, 2)
+
+        window.energyBar = layout:setPosition(1, 1, layout:addChild(GUI.progressBar(1, 1, 1, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Radar energy: ", "%")))
+        local radiusSlider = layout:setPosition(1, 1, layout:addChild(GUI.slider(1, 1, 1, colors.focusColor, colors.elevation1, colors.accentColor, colors.contentColor, 1, 9999, 1, true, "Radius: ", "")))
+        radiusSlider.roundValues = true
+
+        -- Buttons row
+
+        layout:setDirection(1, 4, GUI.DIRECTION_HORIZONTAL)
+        layout:setAlignment(1, 4, GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
+
+        local transporterButton = layout:setPosition(1, 4, layout:addChild(p_accentButton(1, 1, 16, 3, "To transporter")))
+        local limitButton = layout:setPosition(1, 4, layout:addChild(p_accentButton(1, 1, 17, 3, "Limit to energy")))
+        local scanButton = layout:setPosition(1, 4, layout:addChild(p_successButton(1, 1, 6, 3, "Scan")))
+        transporterButton.disabled = true
+
+        -- Filter switch row
+
+        layout:setDirection(1, 2, GUI.DIRECTION_HORIZONTAL)
+        layout:setAlignment(1, 2, GUI.ALIGNMENT_HORIZONTAL_LEFT, GUI.ALIGNMENT_VERTICAL_CENTER)
+        layout:setFitting(1, 2, true, false)
+
+        local filterSwitch = layout:setPosition(1, 2, layout:addChild(p_switchAndLabel(1, 1, 1, "Filter \"default\" ships on scan")))
+
+        -- List row
+
+        layout:setFitting(1, 3, true, true)
+
+        local resultsBox = layout:setPosition(1, 3, layout:addChild(p_textBoxWithSelection(1, 1, 1, 1)))
+
+        resultsBox:addItem("Press \"Scan\" to scan.")
+        resultsBox:addItem("")
+        resultsBox:addItem("You can limit the radius to your current")
+        resultsBox:addItem("radar energy by clicking \"Limit to energy\".")
+        resultsBox:addItem("")
+        resultsBox:addItem("You can send a selected entry directly to")
+        resultsBox:addItem("your Transporter by clicking \"To Transporter\".")
+
+        resultsBox.onItemSelected = function()
+            transporterButton.disabled = false
+        end
+
+        -- Button functions
+
+        limitButton.onTouch = function()
+            -- This equation might not be accurate
+            local maxAffordableRadius = 10 * (10 * wrapper.radar.getRadarEnergy()) ^ (1 / 3)
+
+            radiusSlider.value = maxAffordableRadius
+        end
+
+        transporterButton.onTouch = function()
+            local index = resultsBox.selectedIndex
+
+            if index == nil then
+                GUI.alert("Scan entry is not selected.")
+            end
+
+            if not wrapper.transporterApiAvailable() then
+                GUI.alert("Transporter is not available.")
+
+                return
+            end
+
+            local pos = lastResults[index].pos
+
+            wrapper.transporter.setCoordinates(pos[1], pos[2], pos[3])
+        end
+
+        scanButton.onTouch = function()
+            local value = math.round(radiusSlider.value)
+
+            if wrapper.radar.getRadarEnergy() < wrapper.radar.getRequiredEnergy(value) then
+                GUI.alert("Insufficient energy.")
+
+                return
+            end
+
+            scanButton.disabled = true
+            transporterButton.disabled = true
+            resultsBox:clear()
+            resultsBox.selectionAllowed = false
+            resultsBox:addItem("Currently scanning. Please wait :)")
+
+            wrapper.radar.enqueueScan(value)
+        end
+
+        -- event handler
+
+        local eventHandlerObj = window:addChild(GUI.object(1, 1, 1, 1))
+
+        eventHandlerObj.eventHandler = function(_, _, eventName)
+            if eventName ~= "ponosRadarScanComplete" then
+                return
+            end
+
+            lastResults = wrapper.radar.getCurrentResults()
+
+            resultsBox:clear()
+
+            if #lastResults > 0 then
+                if filterSwitch.switch.state then
+                    for i = #lastResults, 1, -1 do
+                        if lastResults[i].name == "default" and lastResults[i].mass < 2 then
+                            table.remove(lastResults, i)
+                        end
+                    end
+                end
+
+                for i, result in ipairs(lastResults) do
+                    resultsBox:addItem(string.format("%s: %s [%s %s %s] {%s}", i, result.name, result.pos[1], result.pos[2], result.pos[3], result.mass))
+                end
+
+                resultsBox.selectionAllowed = true
+            else
+                resultsBox:addItem("Unfortunately, nothing was found :(")
+            end
+
+            scanButton.disabled = false
+
+            application:draw()
+        end
 
         return window
     end
@@ -934,11 +1166,23 @@ menu:addItem("Refresh info", colors.contentColor2).onTouch = function()
     windowManager.reloadWindows()
 end
 
+menu:addItem("LayoutDbg", colors.contentColor2).onTouch = function()
+    for _, window in ipairs(windowManager.activeWindows) do
+        for _, child in ipairs(window.children) do
+            if child.showGrid ~= nil then
+                child.showGrid = not child.showGrid
+            end
+        end
+    end
+
+    application:draw()
+end
+
 bar = application:addChild(p_appBar(1, 2, application.width, {
     { "Jump Menu", "jump" },
     { "Ship Info", "s_info" },
     { "Warp Radar", "radar" },
-    { "Crew", "crew" },
+    { "The Crew 2", "crew" },
     { "Cloaking", "cloaking" },
     { "Transporter", "transporter" }
 }))

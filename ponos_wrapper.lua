@@ -4,7 +4,7 @@ local thread = require("thread")
 
 local wrapper = {}
 
-wrapper.demoMode = false -- Demo mode prevents actual components from being used. Makes debugging easier.
+wrapper.demoMode = false -- Demo mode allows using the program without actual WarpDrive components involved, filling sample data in all methods.
 wrapper.ship = {} -- ShipController
 wrapper.radar = {} -- Radar
 wrapper.transporter = {} -- MatterOverdrive Transporter
@@ -57,39 +57,72 @@ wrapper.transporter.setCoordinates = function(x, y, z)
     wrapper.transporter.getComponent().setZ(0, z)
 end
 
-wrapper.radar.scan = function(radius)
-    -- Scans within the specified radius. An event containing scan index is pushed when the scan is done.
+wrapper.radar.enqueueScan = function(radius)
+    -- Enqueues a radar scan within the specified radius. "ponosRadarScanComplete" event is pushed when the scan
+    -- is finished. Use getCurrentResults to fetch results after the event is received.
+
     if wrapper.demoMode then
-        event.push("is2wrapperRadarScan", -1)
+        event.timer(2, function()
+            require("computer").pushSignal("ponosRadarScanComplete")
+        end)
+
         return
     end
 
-    wrapper.radar.getComponent().radius(radius)
-    wrapper.radar.getComponent().start()
+    local radar = wrapper.radar.getComponent()
 
-    os.sleep(wrapper.radar.getComponent().getScanDuration(radius))
+    radar.radius(radius)
+    radar.start()
 
-    event.push("is2wrapperRadarScan", wrapper.radar.getComponent().getResultsCount())
+    event.timer(radar.getScanDuration(radius), function()
+        event.push("ponosRadarScanComplete")
+    end)
 end
 
-wrapper.radar.getResult = function(index)
+wrapper.radar.getCurrentResults = function()
+    -- Returns result table of the latest scan
+    -- Example of a result table entry:
+    -- {name = "Ship Name", pos = {1, 2, 3}, mass = 123}
+
     if wrapper.demoMode then
-        return nil
+        return {
+            {
+                name = "Demo mode radar ship 1",
+                pos = { 1488, 256, 1337 },
+                mass = 1451
+            },
+            {
+                name = "Demo mode radar ship 2",
+                pos = { 23413, 142, 65242 },
+                mass = 5555
+            },
+            {
+                name = "default",
+                pos = { 23413, 142, 65242 },
+                mass = 1
+            },
+        }
     end
 
-    local success, objectType, name, x, y, z, mass = wrapper.radar.getComponent().getResult(index)
+    local results = {}
 
-    if not success then
-        return nil
+    local radar = wrapper.radar.getComponent()
+
+    for i = 0, #radar.getResultsCount() do
+        local success, _, name, x, y, z, mass = radar.result(i)
+
+        if success then
+            table.insert({ name = name, pos = { x, y, z }, mass = mass })
+        end
     end
 
-    return objectType, name, x, y, z, mass
+    return results
 end
 
 wrapper.radar.getMaxRadarEnergy = function()
     -- Gets maximum radar energy
     if wrapper.demoMode then
-        return 100000000
+        return 1000
     end
 
     local _, maxEnergy = wrapper.radar.getComponent().energy()
@@ -100,7 +133,7 @@ end
 wrapper.radar.getRadarEnergy = function()
     -- Gets current radar energy
     if wrapper.demoMode then
-        return 10000
+        return 500
     end
 
     local energy = wrapper.radar.getComponent().energy()
@@ -133,13 +166,13 @@ wrapper.ship.getCoreStats = function()
     -- "cooldown" means that this core has been used recently and is currently on cooldown
 
     if wrapper.demoMode then
-        return {"ready", "active", "cooldown", "cooldown", "ready", "cooldown", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready"}
+        return { "ready", "active", "cooldown", "cooldown", "ready", "cooldown", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready", "ready" }
     end
 
     local results = {}
 
     for ship, _ in pairs(component.list("warpdriveShipController")) do
-       local shipTime = wrapper.ship.controllerTimes[ship]
+        local shipTime = wrapper.ship.controllerTimes[ship]
 
         if shipTime ~= nil and shipTime ~= 0 then
             table.insert(results, "cooldown")
@@ -156,7 +189,7 @@ end
 wrapper.ship.getAllControllersAddresses = function()
     -- Returns a list of all attached ship controllers' addresses
     if wrapper.demoMode then
-        return {"Non-existent address 1", "Non-existent address 2", "Non-existent address 3"}
+        return { "Non-existent address 1", "Non-existent address 2", "Non-existent address 3" }
     end
 
     local addresses = {}
