@@ -109,7 +109,7 @@ wrapper.radar.getCurrentResults = function()
     local radar = wrapper.radar.getComponent()
 
     for i = 0, radar.getResultsCount() do
-        local success, _, name, x, y, z, mass = radar.result(i)
+        local success, _, name, x, y, z, mass = radar.getResult(i)
 
         if success then
             table.insert({ name = name, pos = { x, y, z }, mass = mass })
