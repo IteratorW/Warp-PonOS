@@ -108,7 +108,7 @@ wrapper.radar.getCurrentResults = function()
 
     local radar = wrapper.radar.getComponent()
 
-    for i = 0, #radar.getResultsCount() do
+    for i = 0, radar.getResultsCount() do
         local success, _, name, x, y, z, mass = radar.result(i)
 
         if success then
