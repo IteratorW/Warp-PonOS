@@ -4,6 +4,7 @@ local image = require("image")
 local component = require("component")
 local wrapper = require("ponos_wrapper")
 local fs = require("filesystem")
+local unicode = require("unicode")
 
 --------------------------------------------------------------------------------
 -- Constants and settings
@@ -157,6 +158,29 @@ GUI.drawShadow = function(x, y, width, height, transparency, thin)
     -- we really need to get rid of window shadows, so far this is the only way i figured
 end
 
+local function sliderDrawSmallCircle(object)
+    -- Using a big pipe symbol (⬤) just doesn't work - sometimes it doesn't render or breaks neighbour pixels. This function exists to replace that character.
+    object.value = math.min(math.max(object.value, object.minimumValue), object.maximumValue)
+
+    if object.showMaximumAndMinimumValues then
+        local stringMaximumValue, stringMinimumValue = tostring(object.roundValues and math.floor(object.maximumValue) or math.roundToDecimalPlaces(object.maximumValue, 2)), tostring(object.roundValues and math.floor(object.minimumValue) or math.roundToDecimalPlaces(object.minimumValue, 2))
+        buffer.drawText(object.x - unicode.len(stringMinimumValue) - 1, object.y, object.colors.value, stringMinimumValue)
+        buffer.drawText(object.x + object.width + 1, object.y, object.colors.value, stringMaximumValue)
+    end
+
+    if object.currentValuePrefix or object.currentValuePostfix then
+        local stringCurrentValue = (object.currentValuePrefix or "") .. (object.roundValues and math.floor(object.value) or math.roundToDecimalPlaces(object.value, 2)) .. (object.currentValuePostfix or "")
+        buffer.drawText(math.floor(object.x + object.width / 2 - unicode.len(stringCurrentValue) / 2), object.y + 1, object.colors.value, stringCurrentValue)
+    end
+
+    local activeWidth = math.round((object.value - object.minimumValue) / (object.maximumValue - object.minimumValue) * object.width)
+    buffer.drawText(object.x, object.y, object.colors.passive, string.rep("━", object.width))
+    buffer.drawText(object.x, object.y, object.colors.active, string.rep("━", activeWidth))
+    buffer.drawText(activeWidth >= object.width and object.x + activeWidth - 1 or object.x + activeWidth, object.y, object.colors.pipe, "●")
+
+    return object
+end
+
 local function p_window(x, y, width, height, title, id)
     local window = GUI.window(x, y, width, height)
 
@@ -208,7 +232,7 @@ local function p_window(x, y, width, height, title, id)
 
     window.titleLabel = window:addChild(GUI.label(1, 1, width, height, colors.contentColor, title)):setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_TOP)
 
-    local closeButton = window:addChild(GUI.button(width - 3, 1, 1, 1, nil, colors.dangerColor, nil, colors.dangerPressedColor, "⬤"))
+    local closeButton = window:addChild(GUI.button(width - 3, 1, 1, 1, nil, colors.dangerColor, nil, colors.dangerPressedColor, "●"))
 
     closeButton.onTouch = function(_, object)
         windowManager.closeWindow(object.parent.id)
@@ -745,6 +769,7 @@ local windows = {
         window.energyBar = layout:setPosition(1, 1, layout:addChild(GUI.progressBar(1, 1, 1, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Radar energy: ", "%")))
         local radiusSlider = layout:setPosition(1, 1, layout:addChild(GUI.slider(1, 1, 1, colors.focusColor, colors.elevation1, colors.accentColor, colors.contentColor, 1, 9999, 1, true, "Radius: ", "")))
         radiusSlider.roundValues = true
+        radiusSlider.draw = sliderDrawSmallCircle
 
         -- Buttons row
 
