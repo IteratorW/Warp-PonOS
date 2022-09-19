@@ -593,7 +593,9 @@ local windows = {
                     wrapper.ship.setCommand("MANUAL", currentController)
                 end
             else
-                currentController = wrapper.ship.getComponent().address
+                if not wrapper.demoMode then
+                    currentController = wrapper.ship.getComponent().address
+                end
             end
         end
 
@@ -699,6 +701,12 @@ local windows = {
     end,
 
     s_info = function()
+        if not wrapper.shipApiAvailable() then
+            GUI.alert("Ship is not available.")
+
+            return nil
+        end
+
         local window = p_window(1, 1, 50, 15, "Ship Information", "s_info")
 
         window.reload = function()
