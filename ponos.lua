@@ -298,7 +298,7 @@ local function p_switchAndLabel(x, y, width, text, state)
 end
 
 local function p_textBoxWithSelection(x, y, width, height)
-    local textBox = GUI.textBox(1, 1, 1, 1, colors.elevation2, colors.contentColor2, {}, 1, 0, 0, false, false)
+    local textBox = GUI.textBox(x, y, width, height, colors.elevation2, colors.contentColor2, {}, 1, 0, 0, false, false)
 
     -- Align to center
     textBox:setAlignment(GUI.ALIGNMENT_HORIZONTAL_CENTER, GUI.ALIGNMENT_VERTICAL_CENTER)
@@ -319,7 +319,7 @@ local function p_textBoxWithSelection(x, y, width, height)
     textBox.eventHandler = function(app, self, eventName, _, eX, eY, scrollDir)
         prevHandler(app, self, eventName, nil, nil, nil, scrollDir)
 
-        if self.selectionAllowed and eventName == "touch" or eventName == "drag" then
+        if self.selectionAllowed and eventName == "touch" then
             local newIndex = eY - self.y + self.currentLine
 
             if newIndex <= #self.lines then
@@ -775,6 +775,8 @@ local windows = {
         resultsBox:addItem("")
         resultsBox:addItem("You can send a selected entry directly to")
         resultsBox:addItem("your Transporter by clicking \"To Transporter\".")
+
+        resultsBox.selectionAllowed = false
 
         resultsBox.onItemSelected = function()
             transporterButton.disabled = false
