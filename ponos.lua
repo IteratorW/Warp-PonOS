@@ -700,14 +700,14 @@ local windows = {
 
         local layout1 = getWindowLayout(window, 1, 2)
 
-        layout1:setRowHeight(1, GUI.SIZE_POLICY_RELATIVE, 0.70)
-        layout1:setFitting(1, 2, true, false)
+        layout1:setRowHeight(1, GUI.SIZE_POLICY_RELATIVE, 0.3)
+        layout1:setFitting(1, 1, true, false)
 
-        window.energyBar = layout1:setPosition(1, 2, layout1:addChild(GUI.progressBar(1, 1, 1, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Ship energy: ", "%")))
+        window.energyBar = layout1:setPosition(1, 1, layout1:addChild(GUI.progressBar(1, 1, 1, colors.accentColor, colors.dangerColor, colors.contentColor, 0, true, true, "Ship energy: ", "%")))
 
         -- Main information
 
-        local layout2 = layout1:setPosition(1, 1, layout1:addChild(GUI.layout(1, 1, layout1.width, layout1.height, 2, 1)))
+        local layout2 = layout1:setPosition(1, 2, layout1:addChild(GUI.layout(1, 1, layout1.width, layout1.height, 2, 1)))
 
         layout2:setFitting(1, 1, true, false)
         layout2:setFitting(2, 1, true, false)
