@@ -5,6 +5,7 @@ local component = require("component")
 local wrapper = require("ponos_wrapper")
 local fs = require("filesystem")
 local unicode = require("unicode")
+local event = require("event")
 
 --------------------------------------------------------------------------------
 -- Constants and settings
@@ -45,7 +46,9 @@ local settings = {
     proxyAddress = "",
     accentColor = nil,
     multiCoreEnabled = false,
-    firstStart = true
+    firstStart = true,
+
+    windowData = {}
 }
 
 local function saveSettings()
@@ -69,6 +72,8 @@ local function loadSettings()
         colors.accentColor = settings.accentColor
     end
 end
+
+---------- window position saving
 
 --------------------------------------------------------------------------------
 -- Utility functions
@@ -94,10 +99,11 @@ end
 -- Window manager
 
 local windowManager = {
-    activeWindows = {}
+    activeWindows = {},
+    windowsUpdated = false
 }
 
-windowManager.openWindow = function(window)
+windowManager.openWindow = function(window, x, y)
     if window == nil then
         return
     end
@@ -112,14 +118,21 @@ windowManager.openWindow = function(window)
         end
     end
 
-    window.x = math.ceil(application.width / 2) - math.ceil(window.width / 2)
-    window.y = math.ceil(application.height / 2) - math.ceil(window.height / 2)
+    if x ~= nil and y ~= nil then
+        window.x = x
+        window.y = y
+    else
+        window.x = math.ceil(application.width / 2) - math.ceil(window.width / 2)
+        window.y = math.ceil(application.height / 2) - math.ceil(window.height / 2)
+    end
 
     window.reload()
 
     table.insert(windowManager.activeWindows, window)
     application:addChild(window)
     application:draw()
+
+    windowManager.windowsUpdated = true
 end
 
 windowManager.closeWindow = function(id)
@@ -129,6 +142,8 @@ windowManager.closeWindow = function(id)
         if activeWindow.id == id then
             activeWindow.close(activeWindow)
             table.remove(windowManager.activeWindows, i)
+
+            windowManager.windowsUpdated = true
 
             return
         end
@@ -142,6 +157,21 @@ windowManager.reloadWindows = function()
 
     application:draw()
 end
+
+event.timer(5, function()
+    -- this keeps running when the program is closed. gotta fix
+    if windowManager.windowsUpdated then
+        settings.windowData = {}
+
+        for _, activeWindow in ipairs(windowManager.activeWindows) do
+            settings.windowData[activeWindow.id] = { activeWindow.x, activeWindow.y }
+        end
+
+        windowManager.windowsUpdated = false
+
+        saveSettings()
+    end
+end, math.huge)
 
 --------------------------------------------------------------------------------
 -- Custom UI objects and functions
@@ -183,6 +213,14 @@ end
 
 local function p_window(x, y, width, height, title, id)
     local window = GUI.window(x, y, width, height)
+
+    local prevHandler = window.eventHandler
+
+    window.eventHandler = function(...)
+        prevHandler(...)
+
+        windowManager.windowsUpdated = true
+    end
 
     window.id = id
 
@@ -1227,6 +1265,12 @@ if settings.firstStart then
     saveSettings()
 
     fullScreenContainers.about()
+end
+
+for windowId, pos in pairs(settings.windowData) do
+    local window = windows[windowId]()
+
+    windowManager.openWindow(window, pos[1], pos[2])
 end
 
 --------------------------------------------------------------------------------
