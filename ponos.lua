@@ -694,6 +694,8 @@ local windows = {
         layout2:setMargin(2, 1, 0, -1)
 
         window.positionTextBox = layout2:setPosition(1, 1, layout2:addChild(GUI.textBox(1, 1, 1, 4, nil, colors.contentColor, { "Position:", "N/A", "N/A", "N/A" })))
+        window.positionTextBox.eventHandler = nil
+
         window.dimLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "dimension")))
         window.orientationLabel = layout2:setPosition(1, 1, layout2:addChild(GUI.label(1, 1, 1, 1, colors.contentColor, "orientation")))
 
