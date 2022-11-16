@@ -112,7 +112,7 @@ wrapper.radar.getCurrentResults = function()
         local success, _, name, x, y, z, mass = radar.getResult(i)
 
         if success then
-            table.insert(results, { name = name, pos = { x, y, z }, mass = mass })
+            table.insert(results, { name = name, pos = { tonumber(x), tonumber(y), tonumber(z)}, mass = tonumber(mass) })
         end
     end
 
@@ -289,7 +289,7 @@ wrapper.ship.getPosition = function(addr)
 
     local x, y, z = wrapper.ship.getComponent(addr).position()
 
-    return x, y, z
+    return tonumber(x), tonumber(y), tonumber(z)
 end
 
 wrapper.ship.getDimPositive = function(addr)
@@ -298,7 +298,8 @@ wrapper.ship.getDimPositive = function(addr)
         return 10, 5, 7
     end
 
-    return wrapper.ship.getComponent(addr).dim_positive()
+    local i, j, k = wrapper.ship.getComponent(addr).dim_positive()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.getDimNegative = function(addr)
@@ -307,7 +308,8 @@ wrapper.ship.getDimNegative = function(addr)
         return 4, 3, 6
     end
 
-    return wrapper.ship.getComponent(addr).dim_negative()
+    local i, j, k = wrapper.ship.getComponent(addr).dim_negative()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.getMaxJumpDistance = function(addr)
@@ -316,9 +318,9 @@ wrapper.ship.getMaxJumpDistance = function(addr)
         return 250
     end
 
-    _, max = wrapper.ship.getComponent(addr).getMaxJumpDistance()
+    local _, max = wrapper.ship.getComponent(addr).getMaxJumpDistance()
 
-    return max
+    return tonumber(max)
 end
 
 wrapper.ship.getMovement = function(addr)
@@ -327,7 +329,8 @@ wrapper.ship.getMovement = function(addr)
         return 40, 30, 20
     end
 
-    return wrapper.ship.getComponent(addr).movement()
+    local i, j, k = wrapper.ship.getComponent(addr).movement()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.setMovement = function(x, y, z, addr)
@@ -401,7 +404,8 @@ wrapper.ship.getPosition = function(addr)
         return 1337, 228, 1488
     end
 
-    return wrapper.ship.getComponent(addr).position()
+    local i, j, k = wrapper.ship.getComponent(addr).position()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.getPostionCompensation = function(addr)
@@ -456,7 +460,7 @@ wrapper.ship.getOrientation = function(addr)
 
     local x, _, z = wrapper.ship.getComponent(addr).getOrientation()
 
-    return x, z
+    return tonumber(x), tonumber(z)
 end
 
 wrapper.ship.getShipName = function(addr)
