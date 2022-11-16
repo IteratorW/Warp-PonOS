@@ -404,6 +404,50 @@ wrapper.ship.getPosition = function(addr)
     return wrapper.ship.getComponent(addr).position()
 end
 
+wrapper.ship.getPostionCompensation = function(addr)
+    -- If multicore is enabled, ship coordinates fluctuate a bit
+    -- Calculates relative center of the ship in absolute orientation (X=1 Z=0)
+    -- Position + compensation is constant no matter which core you choose (if their dimensions cover the same volume, which is the case)
+    if wrapper.demoMode then 
+        return 0, 0, 0
+    end
+
+    local front,right,up,back,left,down = wrapper.ship.getDimPositive(addr), wrapper.ship.getDimNegative(addr)
+    local centerFront = front+1-math.ceil((front+1+back)/2)
+    local centerRight = right+1-math.ceil((right+1+left)/2)
+    local centerUp = up+1-math.ceil((up+1+down)/2)
+    return wrapper.ship.shipVectorToWorldVector(centerFront, centerRight, centerUp)
+end
+
+wrapper.ship.shipVectorToWorldVector = function(x, y, z, addr)
+    local i, j = wrapper.ship.getOrientation(addr)
+    i, j = tonumber(i), tonumber(j)
+    -- matrices are beautiful, but not efficient and bigger in code :C
+    if i == 1 then 
+        return mx,my,mz 
+    elseif i == -1 then
+        return -mx,my,-mz
+    elseif j == 1 then
+        return -mz,my,mx
+    elseif j == -1 then
+        return mz,my,-mx
+    end
+end
+
+wrapper.ship.worldVectorToShipVector = function(x, y, z, addr) 
+    local i, j = wrapper.ship.getOrientation(addr)
+    i, j = tonumber(i), tonumber(j)
+    if i == 1 then 
+        return wx,wy,wz
+    elseif i == -1 then
+        return -wx,wy,-wz
+    elseif j == 1 then
+        return wz,wy,-wx
+    elseif j == -1 then
+        return -wz,wy,wx
+    end
+end
+
 wrapper.ship.getOrientation = function(addr)
     -- Returns X Z ship rotation
     if wrapper.demoMode then
