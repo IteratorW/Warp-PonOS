@@ -112,7 +112,7 @@ wrapper.radar.getCurrentResults = function()
         local success, _, name, x, y, z, mass = radar.getResult(i)
 
         if success then
-            table.insert(results, { name = name, pos = { x, y, z }, mass = mass })
+            table.insert(results, { name = name, pos = { tonumber(x), tonumber(y), tonumber(z)}, mass = tonumber(mass) })
         end
     end
 
@@ -289,7 +289,7 @@ wrapper.ship.getPosition = function(addr)
 
     local x, y, z = wrapper.ship.getComponent(addr).position()
 
-    return x, y, z
+    return tonumber(x), tonumber(y), tonumber(z)
 end
 
 wrapper.ship.getDimPositive = function(addr)
@@ -298,7 +298,8 @@ wrapper.ship.getDimPositive = function(addr)
         return 10, 5, 7
     end
 
-    return wrapper.ship.getComponent(addr).dim_positive()
+    local i, j, k = wrapper.ship.getComponent(addr).dim_positive()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.getDimNegative = function(addr)
@@ -307,7 +308,8 @@ wrapper.ship.getDimNegative = function(addr)
         return 4, 3, 6
     end
 
-    return wrapper.ship.getComponent(addr).dim_negative()
+    local i, j, k = wrapper.ship.getComponent(addr).dim_negative()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.getMaxJumpDistance = function(addr)
@@ -316,9 +318,9 @@ wrapper.ship.getMaxJumpDistance = function(addr)
         return 250
     end
 
-    _, max = wrapper.ship.getComponent(addr).getMaxJumpDistance()
+    local _, max = wrapper.ship.getComponent(addr).getMaxJumpDistance()
 
-    return max
+    return tonumber(max)
 end
 
 wrapper.ship.getMovement = function(addr)
@@ -327,7 +329,8 @@ wrapper.ship.getMovement = function(addr)
         return 40, 30, 20
     end
 
-    return wrapper.ship.getComponent(addr).movement()
+    local i, j, k = wrapper.ship.getComponent(addr).movement()
+    return tonumber(i), tonumber(j), tonumber(k)
 end
 
 wrapper.ship.setMovement = function(x, y, z, addr)
@@ -401,7 +404,52 @@ wrapper.ship.getPosition = function(addr)
         return 1337, 228, 1488
     end
 
-    return wrapper.ship.getComponent(addr).position()
+    local i, j, k = wrapper.ship.getComponent(addr).position()
+    return tonumber(i), tonumber(j), tonumber(k)
+end
+
+wrapper.ship.getPostionCompensation = function(addr)
+    -- If multicore is enabled, ship coordinates fluctuate a bit
+    -- Calculates relative center of the ship in absolute orientation (X=1 Z=0)
+    -- Position + compensation is constant no matter which core you choose (if their dimensions cover the same volume, which is the case)
+    if wrapper.demoMode then 
+        return 0, 0, 0
+    end
+
+    local front,right,up,back,left,down = wrapper.ship.getDimPositive(addr), wrapper.ship.getDimNegative(addr)
+    local centerFront = front+1-math.ceil((front+1+back)/2)
+    local centerRight = right+1-math.ceil((right+1+left)/2)
+    local centerUp = up+1-math.ceil((up+1+down)/2)
+    return wrapper.ship.shipVectorToWorldVector(centerFront, centerRight, centerUp)
+end
+
+wrapper.ship.shipVectorToWorldVector = function(x, y, z, addr)
+    local i, j = wrapper.ship.getOrientation(addr)
+    i, j = tonumber(i), tonumber(j)
+    -- matrices are beautiful, but not efficient and bigger in code :C
+    if i == 1 then 
+        return mx,my,mz 
+    elseif i == -1 then
+        return -mx,my,-mz
+    elseif j == 1 then
+        return -mz,my,mx
+    elseif j == -1 then
+        return mz,my,-mx
+    end
+end
+
+wrapper.ship.worldVectorToShipVector = function(x, y, z, addr) 
+    local i, j = wrapper.ship.getOrientation(addr)
+    i, j = tonumber(i), tonumber(j)
+    if i == 1 then 
+        return wx,wy,wz
+    elseif i == -1 then
+        return -wx,wy,-wz
+    elseif j == 1 then
+        return wz,wy,-wx
+    elseif j == -1 then
+        return -wz,wy,wx
+    end
 end
 
 wrapper.ship.getOrientation = function(addr)
@@ -412,7 +460,7 @@ wrapper.ship.getOrientation = function(addr)
 
     local x, _, z = wrapper.ship.getComponent(addr).getOrientation()
 
-    return x, z
+    return tonumber(x), tonumber(z)
 end
 
 wrapper.ship.getShipName = function(addr)

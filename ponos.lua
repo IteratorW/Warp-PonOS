@@ -711,6 +711,7 @@ local windows = {
 
         window.reload = function()
             local x, y, z = wrapper.ship.getPosition()
+            local cX, cY, cZ = wrapper.ship.getPostionCompensation()
             local dim = wrapper.ship.getDimensionType()
             if dim == 0 then
                 dim = "Space"
@@ -730,9 +731,9 @@ local windows = {
             local maxEnergy = wrapper.ship.getMaxShipEnergy()
             local energyPercents = math.floor((shipEnergy / maxEnergy) * 100)
 
-            window.positionTextBox.lines[2] = string.format("X: %s", tostring(x))
-            window.positionTextBox.lines[3] = string.format("Y: %s", tostring(y))
-            window.positionTextBox.lines[4] = string.format("Z: %s", tostring(z))
+            window.positionTextBox.lines[2] = string.format("X: %s", tostring(x + cX))
+            window.positionTextBox.lines[3] = string.format("Y: %s", tostring(y + cY)))
+            window.positionTextBox.lines[4] = string.format("Z: %s", tostring(z + cZ))
 
             window.dimLabel.text = string.format("Dimension: %s", dim)
             window.orientationLabel.text = string.format("Orientation: X: %s, Z: %s", oX, oZ)
