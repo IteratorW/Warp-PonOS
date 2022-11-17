@@ -416,7 +416,8 @@ wrapper.ship.getPostionCompensation = function(addr)
         return 0, 0, 0
     end
 
-    local front,right,up,back,left,down = wrapper.ship.getDimPositive(addr), wrapper.ship.getDimNegative(addr)
+    local front,right,up = wrapper.ship.getDimPositive(addr)
+    local back,left,down = wrapper.ship.getDimNegative(addr)
     local centerFront = front+1-math.ceil((front+1+back)/2)
     local centerRight = right+1-math.ceil((right+1+left)/2)
     local centerUp = up+1-math.ceil((up+1+down)/2)
