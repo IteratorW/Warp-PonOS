@@ -429,13 +429,13 @@ wrapper.ship.shipVectorToWorldVector = function(x, y, z, addr)
     i, j = tonumber(i), tonumber(j)
     -- matrices are beautiful, but not efficient and bigger in code :C
     if i == 1 then 
-        return mx,my,mz 
+        return x,y,z 
     elseif i == -1 then
-        return -mx,my,-mz
+        return -x,y,-z
     elseif j == 1 then
-        return -mz,my,mx
+        return -z,y,x
     elseif j == -1 then
-        return mz,my,-mx
+        return z,y,-x
     end
 end
 
@@ -443,13 +443,13 @@ wrapper.ship.worldVectorToShipVector = function(x, y, z, addr)
     local i, j = wrapper.ship.getOrientation(addr)
     i, j = tonumber(i), tonumber(j)
     if i == 1 then 
-        return wx,wy,wz
+        return x,y,z
     elseif i == -1 then
-        return -wx,wy,-wz
+        return -x,y,-z
     elseif j == 1 then
-        return wz,wy,-wx
+        return z,y,-x
     elseif j == -1 then
-        return -wz,wy,wx
+        return -z,y,x
     end
 end
 
