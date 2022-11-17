@@ -421,7 +421,7 @@ wrapper.ship.getPostionCompensation = function(addr)
     local centerFront = front+1-math.ceil((front+1+back)/2)
     local centerRight = right+1-math.ceil((right+1+left)/2)
     local centerUp = up+1-math.ceil((up+1+down)/2)
-    return wrapper.ship.shipVectorToWorldVector(centerFront, centerRight, centerUp)
+    return wrapper.ship.shipVectorToWorldVector(centerFront, centerUp, centerRight)
 end
 
 wrapper.ship.shipVectorToWorldVector = function(x, y, z, addr)
