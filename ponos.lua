@@ -732,7 +732,7 @@ local windows = {
             local energyPercents = math.floor((shipEnergy / maxEnergy) * 100)
 
             window.positionTextBox.lines[2] = string.format("X: %s", tostring(x + cX))
-            window.positionTextBox.lines[3] = string.format("Y: %s", tostring(y + cY)))
+            window.positionTextBox.lines[3] = string.format("Y: %s", tostring(y + cY))
             window.positionTextBox.lines[4] = string.format("Z: %s", tostring(z + cZ))
 
             window.dimLabel.text = string.format("Dimension: %s", dim)
