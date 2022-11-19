@@ -83,14 +83,17 @@ local function calculateMultiCoreDimensions(anchor)
 
     local back, left, down = wrapper.ship.getDimNegative(anchor)
     local front, right, up = wrapper.ship.getDimPositive(anchor)
+    
+    front, right, up = wrapper.ship.shipVectorToWorld(front, right, up)
+    back, left, down = wrapper.ship.shipVectorToWorld(back, left, down)
 
     for _, ship in ipairs(wrapper.ship.getAllControllersAddresses()) do
         if ship ~= anchor then
             local x, y, z = wrapper.ship.getPosition(ship)
             local dX, dY, dZ = aX - x, aY - y, aZ - z
 
-            wrapper.ship.setDimNegative(back - dX, left - dZ, down - dY, ship)
-            wrapper.ship.setDimPositive(front + dX, right + dZ, up + dY, ship)
+            wrapper.ship.setDimNegative(wrapper.ship.worldVectorToShip(back - dX, left - dZ, down - dY, ship))
+            wrapper.ship.setDimPositive(wrapper.ship.worldVectorToShip(front + dX, right + dZ, up + dY, ship))
         end
     end
 end
