@@ -156,7 +156,10 @@ wrapper.ship.hasMultipleControllers = function()
         return true
     end
 
-    return #component.list("warpdriveShipController") > 1
+    local count = 0
+    for _ in pairs(component.list("warpdriveShipController")) do count = count + 1 end
+    
+    return count > 1
 end
 
 wrapper.ship.getCoreStats = function()
