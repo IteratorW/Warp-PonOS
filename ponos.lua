@@ -78,25 +78,45 @@ end
 --------------------------------------------------------------------------------
 -- Utility functions
 
-local function calculateMultiCoreDimensions(anchor)
-    local aX, aY, aZ = wrapper.ship.getPosition(anchor)
-
-    local back, left, down = wrapper.ship.getDimNegative(anchor)
-    local front, right, up = wrapper.ship.getDimPositive(anchor)
     
-    front, right, up = wrapper.ship.shipVectorToWorldVector(front, right, up)
-    back, left, down = wrapper.ship.shipVectorToWorldVector(back, left, down)
+local function calculateMultiCoreDimensions(anchor)
+    local anchorX, anchorY, anchorZ = wrapper.ship.getPosition(anchor)
+    local back_s, left_s, down_s = wrapper.ship.getDimNegative(anchor)
+    local front_s, right_s, up_s = wrapper.ship.getDimPositive(anchor)
+    
+    local front_w, up_w, right_w = wrapper.ship.shipVectorToWorldVector(front_s, up_s, right_s, anchor)
+    local back_w, down_w, left_w = wrapper.ship.shipVectorToWorldVector(back_s, down_s, left_s, anchor)
+
+    local world_maxX = anchorX + front_w
+    local world_maxY = anchorY + up_w
+    local world_maxZ = anchorZ + right_w
+
+    local world_minX = anchorX - back_w
+    local world_minY = anchorY - down_w
+    local world_minZ = anchorZ - left_w
 
     for _, ship in ipairs(wrapper.ship.getAllControllersAddresses()) do
         if ship ~= anchor then
-            local x, y, z = wrapper.ship.getPosition(ship)
-            local dX, dY, dZ = aX - x, aY - y, aZ - z
+            local coreX, coreY, coreZ = wrapper.ship.getPosition(ship)
 
-            wrapper.ship.setDimNegative(wrapper.ship.worldVectorToShipVector(back - dX, left - dZ, down - dY, ship))
-            wrapper.ship.setDimPositive(wrapper.ship.worldVectorToShipVector(front + dX, right + dZ, up + dY, ship))
+            local required_pos_vec_X = world_maxX - coreX
+            local required_pos_vec_Y = world_maxY - coreY
+            local required_pos_vec_Z = world_maxZ - coreZ
+
+            local required_neg_vec_X = coreX - world_minX
+            local required_neg_vec_Y = coreY - world_minY
+            local required_neg_vec_Z = coreZ - world_minZ
+
+            local new_front_s, new_up_s, new_right_s = wrapper.ship.worldVectorToShipVector(required_pos_vec_X, required_pos_vec_Y, required_pos_vec_Z, ship)
+            local new_back_s, new_down_s, new_left_s = wrapper.ship.worldVectorToShipVector(required_neg_vec_X, required_neg_vec_Y, required_neg_vec_Z, ship)
+
+            wrapper.ship.setDimPositive(new_front_s, new_right_s, new_up_s, ship)
+            wrapper.ship.setDimNegative(new_back_s, new_left_s, new_down_s, ship)
         end
     end
 end
+
+  
 
 --------------------------------------------------------------------------------
 -- Window manager
