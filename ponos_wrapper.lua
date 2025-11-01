@@ -52,9 +52,9 @@ wrapper.transporter.setCoordinates = function(x, y, z)
         return
     end
 
-    wrapper.transporter.getComponent().setX(0, x)
-    wrapper.transporter.getComponent().setY(0, y)
-    wrapper.transporter.getComponent().setZ(0, z)
+    wrapper.transporter.getComponent().setX(0.0, x * 1.0)
+    wrapper.transporter.getComponent().setY(0.0, y * 1.0)
+    wrapper.transporter.getComponent().setZ(0.0, z * 1.0)
 end
 
 wrapper.radar.enqueueScan = function(radius)
